@@ -6,7 +6,7 @@ module CkeditorWave
       ck_image = CkImage.new(ck_image: params[:ck_image], uuid: SecureRandom.uuid)
 
       if ck_image.save
-        render json: { url: ck_image.url }
+        render json: ck_image.url
       else
         head 500
       end
