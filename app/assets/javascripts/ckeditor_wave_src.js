@@ -1,40 +1,33 @@
 const initiateCkeditor = (...args) => {
-  const editor_ids = Array.from(args);
-
-  editor_ids.forEach(function(editor_id){
-    newEditor(editor_id);
-  });
+  return Array.from(args).map(editor_id => newEditor(editor_id));
 }
 
 const newEditor = (editor_id) => {
   const ck_editor = document.querySelector(editor_id);
 
-  if (ck_editor === null)
+  if (ck_editor === null || ck_editor.editor)
     return false;
 
-  try{
-    ClassicEditor
+  try {
+    return ClassicEditor
       .create(ck_editor)
       .then(editor => {
-        editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
-          return new UploadAdapter(loader);
-        };
+        ck_editor.editor = editor;
+        editor.plugins.get('FileRepository').createUploadAdapter = (loader) => new UploadAdapter(loader)
       })
-      .catch(error => {
-        console.error(error);
-      });
-  } catch(error) {
+      .catch(error => console.error(error));
+  } catch (error) {
     console.log(error);
     console.log('Is ckeditor.js included?', 'https://ckeditor.com/ckeditor-5/download/');
   }
 }
 
 class UploadAdapter {
-  constructor( loader ) {
+  constructor(loader) {
     this.loader = loader;
   }
 
-  upload() {
+  upload () {
     return this.loader.file
       .then(file => new Promise((resolve, reject) => {
         this._initRequest();
@@ -43,18 +36,18 @@ class UploadAdapter {
       }));
   }
 
-  abort() {
+  abort () {
     if (this.xhr)
       this.xhr.abort();
   }
 
-  _initRequest() {
+  _initRequest () {
     const xhr = this.xhr = new XMLHttpRequest();
     xhr.open('POST', '/ckeditor_wave/ck_images', true);
     xhr.responseType = 'json';
   }
 
-  _initListeners(resolve, reject, file) {
+  _initListeners (resolve, reject, file) {
     const xhr = this.xhr;
     const loader = this.loader;
     const genericErrorText = `Couldn't upload file: ${file.name}.`;
@@ -64,10 +57,10 @@ class UploadAdapter {
     xhr.addEventListener('load', () => {
       const response = xhr.response;
 
-      if (!response || response.error)
+      if (! response || response.error)
         return reject(response && response.error ? response.error.message : genericErrorText);
 
-      resolve({default: response.url});
+      return resolve({ default: response.url });
     });
 
     // progress not being displayed currently
@@ -81,9 +74,8 @@ class UploadAdapter {
     }
   }
 
-  _sendRequest(file) {
+  _sendRequest (file) {
     const data = new FormData();
-
     data.append('ck_image', file);
     this.xhr.send(data);
   }
