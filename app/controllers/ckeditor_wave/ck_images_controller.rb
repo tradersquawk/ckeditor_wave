@@ -11,5 +11,10 @@ module CkeditorWave
         head 500
       end
     end
+    
+    def destroy
+      CkImage.where(uuid: parmas[:id]).destroy
+      head 200
+    end
   end
 end
